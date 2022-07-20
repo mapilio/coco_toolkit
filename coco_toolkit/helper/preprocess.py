@@ -417,8 +417,20 @@ class PreProcess:
 
     @staticmethod
     def train_test_validation_split(
-        coco_file_path, image_path: str, test_percent: int, validation_percent: int, out_path: str,
+        coco_file_path,
+        image_path: str,
+        test_percent: int,
+        validation_percent: int,
+        out_path: str,
     ):
+        """
+        :param coco_file_path: Coco json file path
+        :param image_path: Path of folder that contains dataset images
+        :param test_percent:Test split percent
+        :param validation_percent: Validation split percent
+        :param out_path: Output path
+        :return: Return spoiled train test validation datasets
+        """
 
         time = str(datetime.datetime.now()).split(".")[0].split()
         time = "-".join(time).replace(":", "-")
@@ -462,17 +474,17 @@ class PreProcess:
         coco = PreProcess(coco_file_path).reader()
         PreProcess.check_id_unique(coco)
 
-        len_ann = len(coco["annotations"])
-        len_test = int(len_ann * test_percent / 100)
-        len_validation = int(len_ann * validation_percent / 100)
-        len_train = len_ann - (len_test + len_validation)
+        len_images = len(coco["images"])
+        len_test = int(len_images * test_percent / 100)
+        len_validation = int(len_images * validation_percent / 100)
+        len_train = len_images - (len_test + len_validation)
 
         log = logging.getLogger()
-        log.info("Train annotation count :", len_train)
-        log.info("Test annotation count :", len_test)
-        log.info("Validation annotation count :", len_validation)
+        log.info("Train image count :" + str(len_train))
+        log.info("Test image count :" + str(len_test))
+        log.info("Validation image count :" + str(len_validation))
 
-        answer = input("Do you want to split annotations?  [yes/ no]: ")
+        answer = input("Do you want to split datasets?  [yes/ no]: ")
         if any(answer.lower() == f for f in ["no", "n", "0"]):
             test_p = input("Please choose test percent : %")
             val_p = input("Please choose val percent : %")
@@ -486,37 +498,33 @@ class PreProcess:
         for i in tqdm(range(len_test + len_validation)):
             x = random.randint(0, (len_test + len_validation))
             while x in random_list:
-                x = random.randint(0, len(coco["annotations"]) - 1)
+                x = random.randint(0, len(coco["images"]) - 1)
             random_list.append(x)
 
             if i < len_validation:
-                validation["annotations"] += [coco["annotations"][x]]
-                id_train.append(coco["annotations"][x]["id"])
-                img_id_val.append(coco["annotations"][x]["image_id"])
+                validation["images"] += [coco["images"][x]]
+                img_id_val.append(coco["images"][x]["id"])
+                list_dir_validation.append(coco["images"][x]["file_name"])
+                id_train.append(coco["images"][x]["id"])
             else:
-                test["annotations"] += [coco["annotations"][x]]
-                id_train.append(coco["annotations"][x]["id"])
-                img_id_test.append(coco["annotations"][x]["image_id"])
-
-        for ann in tqdm(coco["annotations"]):
-            if ann["id"] not in id_train:
-                train["annotations"] += [ann]
-                img_id_train.append(ann["image_id"])
-
-        img_id_test = set(img_id_test)
-        img_id_train = set(img_id_train)
-        img_id_val = set(img_id_val)
+                test["images"] += [coco["images"][x]]
+                img_id_test.append(coco["images"][x]["id"])
+                list_dir_test.append(coco["images"][x]["file_name"])
+                id_train.append(coco["images"][x]["id"])
 
         for img in tqdm(coco["images"]):
-            if img["id"] in img_id_train:
+            if img["id"] not in id_train:
                 train["images"] += [img]
                 list_dir_train.append(img["file_name"])
-            if img["id"] in img_id_test:
-                test["images"] += [img]
-                list_dir_test.append(img["file_name"])
-            if img["id"] in img_id_val:
-                validation["images"] += [img]
-                list_dir_validation.append(img["file_name"])
+                img_id_train.append(img["id"])
+
+        for ann in tqdm(coco["annotations"]):
+            if ann["image_id"] in img_id_train:
+                train["annotations"] += [ann]
+            if ann["image_id"] in img_id_test:
+                test["annotations"] += [ann]
+            if ann["image_id"] in img_id_val:
+                validation["annotations"] += [ann]
 
         os.makedirs(exit_path + "/train/annotations"), os.makedirs(exit_path + "/train/images")
         p = PreProcess(out_path)
@@ -525,14 +533,16 @@ class PreProcess:
 
             for image in list_dir_test:
                 shutil.copy(
-                    image_path + f"/{image}", exit_path + "/test/images" + f"/{image}",
+                    image_path + f"/{image}",
+                    exit_path + "/test/images" + f"/{image}",
                 )
             test = p.set_unique_annotation_id(test, 1, False)
             test = p.set_unique_image_id(test, 1, False)
             PreProcess.save_coco_file(test, exit_path + "/test/annotations/" + "test")
         for image in list_dir_train:
             shutil.copy(
-                image_path + f"/{image}", exit_path + "/train/images" + f"/{image}",
+                image_path + f"/{image}",
+                exit_path + "/train/images" + f"/{image}",
             )
         train = p.set_unique_annotation_id(train, 1, False)
         train = p.set_unique_image_id(train, 1, False)
@@ -543,12 +553,14 @@ class PreProcess:
 
             for image in list_dir_validation:
                 shutil.copy(
-                    image_path + f"/{image}", exit_path + "/validation/images" + f"/{image}",
+                    image_path + f"/{image}",
+                    exit_path + "/validation/images" + f"/{image}",
                 )
             validation = p.set_unique_annotation_id(validation, 1, False)
             validation = p.set_unique_image_id(validation, 1, False)
             PreProcess.save_coco_file(
-                validation, exit_path + "/validation/annotations/" + "validation",
+                validation,
+                exit_path + "/validation/annotations/" + "validation",
             )
         log.info("Data split Done!")
         log.info(f" Data saved to {exit_path}")
