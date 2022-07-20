@@ -109,6 +109,7 @@ class PreProcess:
         are unique. İf each id unique
         returns True, otherwise False
         """
+        log = logging.getLogger()
         anno = []
         image = []
         category = []
@@ -119,26 +120,17 @@ class PreProcess:
         for cat in coco["categories"]:
             category.append(cat["id"])
 
-        if np.unique(anno).size == len(anno):
-            a = True
-        else:
-            print("Annotations id not unique")
-            a = False
-        if np.unique(image).size == len(image):
-            b = True
-        else:
-            print("Image id not unique")
-            b = False
+        a = True if np.unique(image).size == len(image) else False
+        log.info("Annotations id not unique") if not a else None
 
-        if np.unique(category).size == len(category):
-            c = True
-        else:
-            print("Category id not unique")
-            c = False
+        b = True if np.unique(image).size == len(image) else False
+        log.info("Image id not unique") if not b else None
+
+        c = True if np.unique(category).size == len(category) else False
+        log.info("Category id not unique") if not c else None
 
         if a and b and c:
             return True
-
         else:
             assert not (a and b and c), "Id not unique"
 
@@ -562,3 +554,98 @@ class PreProcess:
         log.info(f" Data saved to {exit_path}")
 
         return train, test, validation
+
+    def unite_classes(self, coco: any, class_names: list, new_class_name, inplace: bool):
+        """
+        This function unite given classes in a class. And return new coco json file
+        :param coco: Coco json file
+        :param class_names: List of class names
+        :param new_class_name: Name of class name to be created
+        :param inplace: If it's True create new coco json file to given directory
+        :return: Coco json file
+        """
+        time = str(datetime.datetime.now()).split(".")[0].split()
+        time = "-".join(time).replace(":", "-")
+
+        classes: list = []
+        class_id: list = []
+
+        for cat in coco["categories"]:
+            if cat["name"] not in class_names:
+                classes.append(cat)
+            else:
+                class_id.append(cat["id"])
+
+        max_id = coco["categories"][-1]["id"]
+
+        # get unique id
+        class_id = list(set(class_id))
+
+        # unite classes in one class
+        classes += [
+            {
+                "id": f"{max_id + 1}",
+                "name": f"{new_class_name}",
+                "supercategory": ""
+            }
+        ]
+
+        # set new class id
+        for ann in coco["annotations"]:
+            if ann["category_id"] in class_id:
+                ann["category_id"] = f"{max_id + 1}"
+
+        # change categories
+        coco["categories"] = classes
+
+        # set unique id
+        coco = PreProcess(self.path).set_unique_class_id(coco, 0, False, False)
+
+        # save if inplace True
+        if inplace:
+            PreProcess.save_coco_file(coco, f"{self.path}/unite_classes_{time}")
+            log = logging.getLogger()
+            log.info(f"New json file created to {self.path}/unite_classes_{time}")
+
+        return coco
+
+    @staticmethod
+    def image_split(image_path: str, test_percent: int, val_percent: int):
+        """
+        :param image_path: Path of folder that obtain images
+        :param test_percent: Image split test percent
+        :param val_percent: Image split val percent
+        :return: Create train test val image folders
+        """
+        time = str(datetime.datetime.now()).split(".")[0].split()
+        time = "-".join(time).replace(":", "-")
+        random_list: list = []
+
+        parent_path = os.path.abspath(os.path.join(image_path, os.pardir))
+        list_images = os.listdir(image_path)
+        len_images = len(list_images)
+
+        len_test = int(len_images * test_percent / 100)
+        len_validation = int(len_images * val_percent / 100)
+
+        os.makedirs(parent_path + f"/train-{time}"), os.makedirs(parent_path + f"/test-{time}")
+        os.makedirs(parent_path + f"/val-{time}")
+        train_path, test_path, val_path = (parent_path + f"/train-{time}", parent_path + f"/test-{time}",
+                                           parent_path + f"/val-{time}")
+
+        for i in tqdm(range(len_test + len_validation)):
+            x = random.randint(0, (len_test + len_validation))
+            while x in random_list:
+                x = random.randint(0, len(list_images) - 1)
+            random_list.append(x)
+
+            if i < len_validation:
+                shutil.copy(image_path + f"/{list_images[x]}", val_path + f"/{list_images[x]}")
+                list_images.remove(list_images[x])
+            else:
+                shutil.copy(image_path + f"/{list_images[x]}", test_path + f"/{list_images[x]}")
+                list_images.remove(list_images[x])
+
+        for image in list_images:
+            shutil.copy(image_path + f"/{image}", train_path + f"/{image}")
+

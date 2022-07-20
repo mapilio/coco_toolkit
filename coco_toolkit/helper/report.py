@@ -77,7 +77,10 @@ class AnalyzeCategories:
         _, data, total = AnalyzeCategories.get_class_info(self)
         plt.figure(figsize=(15, 15))
         plt.pie(
-            list(data.values()), labels=list(data.keys()), autopct="%1.1f%%", rotatelabels=90,
+            list(data.values()),
+            labels=list(data.keys()),
+            autopct="%1.1f%%",
+            rotatelabels=90,
         )
         plt.legend(loc="lower right")
         plt.title("Pie Chart Categories", fontsize=40)
