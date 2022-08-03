@@ -111,185 +111,187 @@ This function read given coco json file path . It returns coco json file as a di
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
+coco = reader(path)
 
 ```
 ##### set_unique_image_id
-This function set unique image id all images. It returns updated coco json file as a dictionary.
+This function set unique image id all images. 
 
-parameter coco: Coco json file to be changed
 parameter first_id: First image id value
-parameter inplace: If it's True create new coco json file to given directory
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-coco = PreProcess(path).reader()
-coco = PreProcess(parent_path_json).set_unique_image_id(coco=coco, first_id=0, inplace=True)
-
+coco = reader(path)
+p = PreProcess(coco)
+p.set_unique_image_id(first_id=1)
+p.coco # Processed coco json file 
 ```
 ##### set_unique_class_id
-This function set unique category id all categories. It returns updated coco json file as a dictionary.
+This function set unique category id all categories.
 
-parameter coco: Coco json file to be changed
 parameter first_id: First image id value
-parameter b_grounds: İf it's True add backgrounds to categories
-parameter inplace: If it's True create new coco json file to given directory
+parameter b_grounds: If it's True add backgrounds to categories if there is no background category
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-coco = PreProcess(path).reader()
-coco = PreProcess(parent_path_json).set_unique_class_id(coco=coco, first_id=0, b_grounds=True, inplace=True)
+coco = reader(path)
+p = PreProcess(coco)
+p.set_unique_class_id(first_id=1-0, back_grounds=True)
+p.coco # Processed coco json file 
 ```
 ##### set_unique_annotation_id
-This function set unique annotation id all annotations. It returns updated coco json file as a dictionary.
+This function set unique annotation id all annotations. 
 
-parameter coco: Coco json file to be changed
 parameter first_id: First image id value
-parameter inplace: If it's True create new coco json file to given directory
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-coco = PreProcess(path).reader()
-coco = PreProcess(parent_path_json).set_unique_annotation_id(coco=coco, first_id=0, inplace=True)
-
+coco = reader(path)
+p = PreProcess(coco)
+p.set_unique_annotation_id(first_id=0-1)
+p.coco # Processed coco json file 
 ```
 ##### check_id_unique
 This function check annotations, image and category id. If all id are unique return True,
-if id not unique return assertion error
-
-parameter coco: Coco json file
+if id not unique return False
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
-PreProcess.check_id_unique(coco=coco)
+coco = reader(path)
+p = PreProcess(coco)
+result = p.check_id_unique() # Return False or True
 ```
 
 ##### extrack_data_by_class_name
-This function extrack coco json file according to given list of categories. Return updated coco json file and save new coco json data(annotations and images).
+This function extrack coco json file according to given list of categories. Saves new coco json data(annotations and images) to given out_path.
 
-parameter coco: Coco json file to be changed
 parameter categories: List of chosen categories names
-parameter image_path: Image path of data set
+parameter image_path: Image path of dataset
+parameter out_path: Output directory
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
+coco = reader(path)
 img_path = "coco_dataset/images"
-coco = PreProcess(path).reader()
+out_path = os.getcwd()
+p = PreProcess(coco)
+export_list = ["crosswalk"]
 extrack_list = ["crosswalk"] # Category to be extracted from coco data
-coco =PreProcess(parent_path_json).extrack_data_by_class_name(coco=coco, categories=extrack_list, image_path=img_path) # extracted coco json file
+p.extrack_data_by_class_name(
+            categories=export_list, image_path=img_path,
+            out_path=out_path
+        )
+p.coco # Processed coco json file 
 ```
 
 ##### filter_data_by_class_name
-This function remove categories by given list of category names. Return updated coco json file and save new coco json data(annotations and images).
+This function remove categories by given list of category names. Saves new coco json data(annotations and images) to given out_path.
 
-parameter coco: Coco json file to be changed
 parameter categories: List of chosen categories names
-parameter image_path: Image path of data set
+parameter image_path: Image path of dataset
+parameter out_path: Output directory
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
+coco = reader(path)
 img_path = "coco_dataset/images"
-coco = PreProcess(path).reader()
-filter_list = ["crosswalk"] # Categories to be removed from coco data
-coco = PreProcess(parent_path_json).filter_data_by_class_name(coco=coco, categories=filter_list, image_path=img_path) # filtered coco json file
+out_path = os.getcwd()
+p = PreProcess(coco)
+filter_list = ["crosswalk"]
+p.filter_data_by_class_name(
+            categories=filter_list, image_path=img_path,
+            out_path=out_path
+        )
+p.coco # Processed coco json file 
+
 ```
 ##### remove_segmentation
 This function remove segmentations from annotations. Return updated coco json file. If parameter inplace True save updated coco json file to given path.
 
-parameter coco: Coco json file to be changed
-parameter inplace: If it's True create new coco json file to given directory
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-coco = PreProcess(path).reader()
-coco = PreProcess(parent_path_json).remove_segmentation(coco=coco, inplace=True)
+coco = reader(path)
+p = PreProcess(coco)
+p.remove_segmentation()
+p.coco # Processed coco json file 
+
 ```
 ##### remove_distorted_bbox
-This function remove distorted bbox from annotations. Return updated coco json file. If parameter inplace True save updated coco json file to given path.
+This function remove distorted bbox from annotations. 
 
-parameter coco: Coco json file to be changed
-parameter inplace: If it's True create new coco json file to given directory
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-coco = PreProcess(path).reader()
-coco = PreProcess(parent_path_json).remove_distorted_bbox(coco=coco, inplace=True)
+coco = reader(path)
+p = PreProcess(coco)
+p.remove_distorted_bbox()
+p.coco # Processed coco json file 
 ```
 ##### box2segmentation
-This function create segmentation list from bbox to annotations if there is no segmentation list . Return updated coco json file. If parameter inplace True save updated coco json file to given path.
-
-parameter coco: Coco json file to be changed
-parameter inplace: If it's True create new coco json file to given directory
+This function create segmentation list from bbox to annotations if there is no segmentation list . 
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-coco = PreProcess(path).reader()
-coco = PreProcess(parent_path_json).box2segmentation(coco=coco, inplace=True)
+coco = reader(path)
+p = PreProcess(coco)
+p.box2segmentation()
+p.coco # Processed coco json file 
 ```
 ##### save_coco_file
-This function save coco json file to given path + file name.
+This function save coco json file to given directory + file name.
 
-parameter coco: Coco json file to be changed
-parameter path_and_filename: Path with name of json file that will be saved.(Without extension .json)
+parameter directory: The directory of coco json file to be saved
+parameter file_name: The file name of coco json file to be saved(without extencion)
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-new_coco_path = "coco_dataset/annotations/new_coco"
-coco = PreProcess(path).reader()
-PreProcess.save_coco_file(coco=coco, path_and_filename=new_coco_path)
+coco = reader(path)
+p = PreProcess(coco)
+dir_ = os.getcwd()
+f_name = "test_save"
+p.save_coco_file(directory=dir_, file_name=f_name)
 ```
 ##### remove_duplicate_image_name
-This function if there is a duplicate image name in coco json file remove duplicate name. Return updated coco json file. If parameter inplace True save updated coco json file to given path.
-
-parameter coco: Coco json file to be changed
-parameter inplace: If it's True create new coco json file to given directory
+This function if there is a duplicate image name in coco json file remove duplicate name.
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-coco = PreProcess(path).reader()
-coco = PreProcess(parent_path_json).remove_duplicate_image_name(coco=coco, inplace=True)
+coco = reader(path)
+p = PreProcess(coco)
+p.remove_duplicate_image_name()
+p.coco # Processed coco json file 
 ```
 ##### change_image_file_names
-This function change image file name in image folder path.And return updated coco json file. If parameter inplace True save updated coco json file to given path.
+This function change images' file name and copy them to a new folder. If inplace True save coco json file to new
+folder.
 
-parameter coco: Coco json file to be changed
-parameter path: Path of folder that contains dataset images
+parameter image_path: Path of folder that contains dataset images
 parameter inplace: If it's True create new coco json file to given directory
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
+coco = reader(path)
+p = PreProcess(coco)
 img_path = "coco_dataset/images"
-coco = PreProcess(path).reader()
-coco = PreProcess(parent_path_json).change_image_file_names(coco=coco, path=img_path, inplace=True)
+p.change_image_file_names(image_path=img_path, inplace=True)
+p.coco # Processed coco json file 
 ```
 ##### train_test_validation_split
 This function split data set to train, test and validation according to given split percent. Return train,test and validation coco json file.
 
-parameter coco_file_path: Coco json file path
 parameter image_path: Path of folder that contains dataset images
 parameter test_percent: Test split percent
 parameter validation_percent: Validation split percent
@@ -298,27 +300,28 @@ parameter out_path: Output path
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
+coco = reader(path)
+p = PreProcess(coco)
 img_path = "coco_dataset/images"
 output_path = "/home/documents"
 
-train,test,validation =train_test_validation_split(coco_file_path=path, image_path=img_path, test_percent=20, validation_percent=15, out_path=output_path)
+train,test,validation = p.train_test_validation_split(image_path=img_path, test_percent=20, validation_percent=15, out_path=output_path)
 ```
 ##### unite_classes
-This function unite given classes in a class. And return new coco json file. If parameter inplace True save updated coco json file to given path.
+This function unite given classes in a class. 
 
- parameter coco: Coco json file
  parameter class_names: List of class names
  parameter new_class_name: Name of class name to be created
- parameter inplace: If it's True create new coco json file to given directory
 
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-parent_path_json = os.path.abspath(os.path.join(path, os.pardir))
-coco = PreProcess(path).reader()
-class_name_list = ['stop', 'trafficlight', 'crosswalk']
+coco = reader(path)
+p = PreProcess(coco)
+class_name_list = ["stop", "trafficlight", "crosswalk"]
 new_class_name = "Road Sign"
-coco = PreProcess(parent_path_json).unite_classes(coco, class_names=class_name_list, new_class_name=new_class_name, inplace=True)
+p.unite_classes(class_names=class_name_list, new_class_name=new_class_name)
+p.coco # Processed coco json file 
 ```
 ##### image_split
 This functon split image dataand  create train test validation image folders.
@@ -337,11 +340,11 @@ PreProcess.image_split(image_path=img_path, test_percent=15, val_percent=25)
 ##### merge_multiple_cocos
 This function merge all given coco datasets and save given directory.
 
+parameter args: It contains lists in index 0 json path and index 1 images path. For example
+[json_path_1, image path_1], [json_path_2, image path_2] 
 parameter merge_path: Path of output folder directory
 parameter first_id: Value of first id
 parameter visualizer: if it's True visualize categories with pie chart
-parameter args: It contains lists in index 0 json path and index 1 images path. For example
-[json_path_1, image path_1], [json_path_2, image path_2] 
 
  For example:
 ```bash
@@ -363,7 +366,7 @@ parameter category: Category name
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
+coco = reader(path)
 count = AnalyzeCategories(coco).given_category_count("crosswalk")
 ```
 ##### class_names
@@ -372,7 +375,7 @@ This function return list of class names .
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
+coco = reader(path)
 class_name_list = AnalyzeCategories(coco).class_names()
 ```
 ##### total_class_count
@@ -381,7 +384,7 @@ This function return class count.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
+coco = reader(path)
 count = AnalyzeCategories(coco).total_class_count()
 ```
 
@@ -391,8 +394,7 @@ This function return class names as  tuple that has annotation.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
-have_anno_class = ("stop", "trafficlight", "crosswalk")
+coco = reader(path)
 tuple = AnalyzeCategories(coco).classes_have_annotations_tuple()
 ```
 ##### plot_class_pie_chart
@@ -403,7 +405,7 @@ parameter visualize: If it's True visualize pie chart.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
+coco = reader(path)
 AnalyzeCategories(coco).plot_class_pie_chart(visualize=True)
 ```
 ##### images_aspect_ratio
@@ -412,7 +414,7 @@ This function return image dataset aspect ratio as dictionary.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
+coco = reader(path)
 info_dictionary = AnalyzeCategories(coco).images_aspect_ratio()
 ```
 
@@ -423,7 +425,7 @@ ratio which is has max count.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
+coco = reader(path)
 info_dictionary = AnalyzeCategories(coco).bbox_aspect_ratio()
 ```
 
@@ -433,7 +435,7 @@ This function return list of  class names that has annotation.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = PreProcess(path).reader()
+coco = reader(path)
 list_class_names = AnalyzeCategories(coco).class_have_ann_list()
 ```
 

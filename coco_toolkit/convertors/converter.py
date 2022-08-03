@@ -2,8 +2,9 @@ import datetime
 import logging
 import os
 import shutil
+from pathlib import Path
 
-from coco_toolkit.helper.preprocess import PreProcess
+from coco_toolkit.helper.preprocess import PreProcess, reader
 from coco_toolkit.modules.voc2coco import main
 
 
@@ -19,17 +20,20 @@ def voc2coco(data_xml_folder_path: str, output_path: str, image_path: str):
 
     main(data_xml_folder_path, output_path, time)
     json_path = output_path + f"/converted_coco_{time}/annotations/coco.json"
-    coco = PreProcess(json_path).reader()
-    coco = PreProcess(json_path).set_unique_image_id(coco, 1, False)
-    coco = PreProcess(json_path).set_unique_annotation_id(coco, 1, False)
-    coco = PreProcess(json_path).set_unique_class_id(coco, 1, False, False)
+    coco = reader(json_path)
+    p = PreProcess(coco)
+    p.set_unique_image_id(first_id=1)
+    p.set_unique_annotation_id(first_id=1)
+    p.set_unique_class_id(first_id=0, back_grounds=True)
     list_dir_img = os.listdir(image_path)
     for image in list_dir_img:
         shutil.copy(
-            image_path + f"/{image}", output_path + f"/converted_coco_{time}/images/{image}",
+            image_path + f"/{image}",
+            output_path + f"/converted_coco_{time}/images/{image}",
         )
-    PreProcess.save_coco_file(coco, json_path.split(".")[0])
-    log = logging.getLogger()
-    log.info("coco dataset is ready!")
-    log.info(f"It's saved to {output_path}/converted_coco_{time}")
-    return coco
+    path = Path(json_path)
+    p.save_coco_file(directory=str(path.parent.absolute()), file_name="coco")
+    logging.getLogger().setLevel(logging.INFO)
+    logging.info("coco dataset is ready!")
+    logging.info(f"It's saved to {output_path}/converted_coco_{time}")
+    return p.coco

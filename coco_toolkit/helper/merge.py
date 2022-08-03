@@ -4,18 +4,19 @@ import shutil
 
 from tqdm import tqdm
 
-from coco_toolkit.helper.preprocess import PreProcess
+from coco_toolkit.helper.preprocess import PreProcess, reader
 from coco_toolkit.helper.report import AnalyzeCategories
 
 
 def merge_multiple_cocos(*args: list, merge_path: str, first_id: int, visualizer: bool):
     """
-    :param merge_path: Path of output folder directory
-    :param first_id: Value of first id
-    :param visualizer: if it's True visualize categories with pie chart
-    :param args: It contains lists in index 0 json path and index 1 images path. For example
-    [json_path_1, image path_1], [json_path_2, image path_2] .....
-    :return: return merge data and save to given directory
+    This function merge all given datasets and save to a new folder with annotation and images.
+        @param args:  It contains lists in index 0 json path and index 1 images path. For example
+        [json_path_1, image path_1], [json_path_2, image path_2] .....
+        @param merge_path: Path of output folder directory
+        @param first_id: Value of first id
+        @param visualizer: If it's True visualize categories with pie chart
+        @return:  Merge data and save to given directory
     """
     merged = {
         "licenses": [],
@@ -38,26 +39,28 @@ def merge_multiple_cocos(*args: list, merge_path: str, first_id: int, visualizer
     for index, path in enumerate(tqdm(args)):
         json_path = path[0]
         image_path = path[1]
-        p = PreProcess(json_path)
-        coco = p.reader()
-        PreProcess.check_id_unique(coco)
-        coco = p.set_unique_image_id(coco, first_id * (index + 1), False)
-        coco = p.set_unique_annotation_id(coco, first_id * (index + 1), False)
+        coco = reader(json_path)
+        p = PreProcess(coco)
+        p.check_id_unique()
+        p.set_unique_image_id(first_id=first_id * (index + 1))
+        p.set_unique_annotation_id(first_id=first_id * (index + 1))
 
         list_dir.append(os.listdir(image_path))
 
-        merged["images"] += coco["images"]
-        merged["annotations"] += coco["annotations"]
+        merged["images"] += p.coco["images"]
+        merged["annotations"] += p.coco["annotations"]
 
         if index == 0:
-            merged["categories"] += coco["categories"]
-            merged["licenses"] = coco["licenses"]
-            merged["info"] = coco["info"]
+            merged["categories"] += p.coco["categories"]
+            if "licenses" in p.coco:
+                merged["licenses"] = p.coco["licenses"]
+            if "info" in p.coco:
+                merged["info"] = p.coco["info"]
 
-            class_names = [cat["name"] for cat in coco["categories"]]
+            class_names = [cat["name"] for cat in p.coco["categories"]]
 
         else:
-            for cat in coco["categories"]:
+            for cat in p.coco["categories"]:
                 if cat["name"] not in class_names:
                     class_names.append(cat["name"])
                     categories.append(cat)
@@ -70,9 +73,10 @@ def merge_multiple_cocos(*args: list, merge_path: str, first_id: int, visualizer
             shutil.copy(image_path + f"/{image}", merged_path_img + f"/{image}")
         list_dir = []
 
-    merged = PreProcess(merge_path).set_unique_class_id(merged, 0, False, False)
-
-    PreProcess.save_coco_file(merged, merged_path_ann + f"/merge")
-    AnalyzeCategories(merged).total_class_count()
-    AnalyzeCategories(merged).plot_class_pie_chart(visualizer)
-    return merged
+    p = PreProcess(merged)
+    p.set_unique_class_id(first_id=0, back_grounds=True)
+    p.save_coco_file(directory=merged_path_ann, file_name="merge")
+    a = AnalyzeCategories(p.coco)
+    a.total_class_count()
+    a.plot_class_pie_chart(visualizer)
+    return p.coco

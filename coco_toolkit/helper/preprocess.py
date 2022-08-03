@@ -6,158 +6,150 @@ import logging
 import os
 import random
 import shutil
+from pathlib import Path
 
 import numpy as np
 from addict import Dict
 from tqdm import tqdm
 
 
+def reader(path: str) -> Dict:
+    """
+    This function read coco json file as a dictionary.
+
+        @param path: Coco json file path to be read
+        @return: Return coco json file as a dictionary
+    """
+    log = logging.getLogger()
+    assert os.path.isfile(path), log.error(" Invalid json file path.Please check your directory")
+
+    with open(path) as f:
+        cfg = json.load(f)
+        return Dict(cfg)
+
+
 class PreProcess:
-    def __init__(self, path: str):
-        self.path = path
+    """
+    Preprocess class for preparing coco json dataset for Training.
+    """
 
-    def set_unique_image_id(self, coco, first_id, inplace: bool):
+    def __init__(self, coco: dict):
         """
-        :param coco: coco json file to be changed
-        :param first_id: first image id value
-        :param inplace: If it's True create new coco json file to given directory
-        :return: coco json file that have unique image id
+        @param coco: Coco json file to be processed
+        """
+        self.coco = coco.copy()
+
+    def set_unique_image_id(self, first_id: int):
+        """
+        This function changes all images id.
+
+            @param first_id: First image id value
         """
 
-        old_dic = {}
+        old_dic: dict = {}
 
-        time = str(datetime.datetime.now()).split(".")[0].split()
-        time = "-".join(time).replace(":", "-")
-
-        for img in coco["images"]:
+        for img in self.coco["images"]:
             old_dic[first_id] = img["id"]
             first_id += 1
 
         new_dict = dict([(value, key) for key, value in old_dic.items()])
 
-        for img in coco["images"]:
+        for img in self.coco["images"]:
             img["id"] = new_dict[img["id"]]
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             ann["image_id"] = new_dict[ann["image_id"]]
-        if inplace:
-            PreProcess.save_coco_file(coco, f"{self.path}/Unique_id_images_{time}")
-            log = logging.getLogger()
-            log.info(f"New json file created to {self.path}/Unique_id_images_{time}")
-        return coco
 
-    def set_unique_class_id(self, coco, first_id: int, b_grounds: bool, inplace: bool):
+    def set_unique_class_id(self, first_id: int, back_grounds: bool):
         """
-        :param coco: coco json file to be changed
-        :param first_id: first image id value
-        :param b_grounds: Boolean variable. İf it's True add backgrounds list
-        :param inplace: If it's True create new coco json file to given directory
-        :return: coco json file that have unique category id
+        This function changes all class' id.
+
+            @param first_id: First class id value
+            @param back_grounds: Boolean variable. İf it's True add background to class
         """
         old_dic = {}
-
-        time = str(datetime.datetime.now()).split(".")[0].split()
-        time = "-".join(time).replace(":", "-")
+        check_bg: list = []
 
         backgrounds = {"id": 0, "name": "Background", "supercategory": ""}
-        for cat in coco["categories"]:
+
+        if back_grounds:
+            for cat in self.coco["categories"]:
+                if cat["name"] == "Background" or cat["name"] == "background":
+                    check_bg.append(1)
+            if not check_bg:
+                self.coco["categories"].insert(0, backgrounds)
+
+        for cat in self.coco["categories"]:
             old_dic[first_id] = cat["id"]
             first_id += 1
 
         new_dict = dict([(value, key) for key, value in old_dic.items()])
 
-        for cat in coco["categories"]:
+        for cat in self.coco["categories"]:
             cat["id"] = new_dict[cat["id"]]
 
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             ann["category_id"] = new_dict[ann["category_id"]]
 
-        if b_grounds:
-            coco["categories"].insert(0, backgrounds)
-
-        if inplace:
-            PreProcess.save_coco_file(coco, f"{self.path}/unique_id_category_{time}")
-            log = logging.getLogger()
-            log.info(f"New json file created to {self.path}/unique_id_category_{time}")
-        return coco
-
-    def set_unique_annotation_id(self, coco, first_id, inplace: bool):
+    def set_unique_annotation_id(self, first_id: int):
         """
-        :param coco: coco json file to be changed
-        :param first_id: first image id value
-        :param inplace: If it's True create new coco json file to given directory
-        :return: coco json file that have unique annotation id
+        This function changes all annotations' id.
+
+            @param first_id: First annotation id value
         """
 
-        time = str(datetime.datetime.now()).split(".")[0].split()
-        time = "-".join(time).replace(":", "-")
-
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             ann["id"] = first_id
             first_id += 1
 
-        if inplace:
-            PreProcess.save_coco_file(coco, f"{self.path}/unique_id_annotation_{time}")
-            log = logging.getLogger()
-            log.info(f"New json file created to {self.path}/unique_id_annotation_{time}")
-        return coco
-
-    @staticmethod
-    def check_id_unique(coco):
+    def check_id_unique(self):
         """
-        :param coco: coco json file to be changed
-        :return: Check annotations' id, image id and category id
-        are unique. İf each id unique
-        returns True, otherwise False
+        This function check all ids are unique or not if not unique return False else return True.
         """
         log = logging.getLogger()
-        anno = []
-        image = []
-        category = []
-        for ann in coco["annotations"]:
+        anno, image, category = [], [], []
+
+        for ann in self.coco["annotations"]:
             anno.append(ann["id"])
-        for img in coco["images"]:
+        for img in self.coco["images"]:
             image.append(img["id"])
-        for cat in coco["categories"]:
+        for cat in self.coco["categories"]:
             category.append(cat["id"])
 
-        a = True if np.unique(image).size == len(image) else False
-        log.info("Annotations id not unique") if not a else None
+        a = True if np.unique(anno).size == len(anno) else False
 
         b = True if np.unique(image).size == len(image) else False
-        log.info("Image id not unique") if not b else None
 
         c = True if np.unique(category).size == len(category) else False
-        log.info("Category id not unique") if not c else None
 
         if a and b and c:
             return True
         else:
-            assert not (a and b and c), "Id not unique"
+            for key, value in {"annotation": a, "image": b, "category": c}.items():
+                if not value:
+                    log.error(f"{key} id not unique")
+            return False
 
-    def extrack_data_by_class_name(self, coco, categories: list, image_path: str):
+    def extrack_data_by_class_name(self, categories: list, image_path: str, out_path: str):
         """
-        :param coco: Coco json file to be changed
-        :param categories: List of chosen categories names
-        :param image_path: image path of data set
-        :return: Exported json file, image save to new folder in given path directory
+        This function export coco json file and images, then save image and json file to new folder in given path directory
+            @param categories: List of chosen categories names
+            @param image_path: Image path of data set
+            @param out_path: Output directory
         """
-        items = []
-        ann_items = []
-        cat_items = []
-        img_id = []
-        move_list_dir = []
-        image_list = []
-        for cat in coco["categories"]:
+        items, ann_items, cat_items, img_id, move_list_dir, image_list = [], [], [], [], [], []
+
+        for cat in self.coco["categories"]:
             if cat["name"] in categories:
                 items.append(cat["id"])
                 cat_items.append(cat)
 
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             if ann["category_id"] in items:
                 ann_items.append(ann)
                 img_id.append(ann["image_id"])
+
         img_id = set(img_id)
-        for img in coco["images"]:
+        for img in self.coco["images"]:
             if img["id"] in img_id:
                 move_list_dir.append(img["file_name"])
                 image_list.append(img)
@@ -165,49 +157,50 @@ class PreProcess:
         time = str(datetime.datetime.now()).split(".")[0].split()
         time = "-".join(time).replace(":", "-")
 
-        os.makedirs(self.path + f"/extracted_dataset_{time}")
+        img_path = out_path + f"/extracted_dataset_{time}/images"
+        ann_path = out_path + f"/extracted_dataset_{time}/annotations"
+
+        os.makedirs(img_path)
+        os.makedirs(ann_path)
 
         for image in move_list_dir:
             shutil.copy(
-                image_path + f"/{image}", self.path + f"/extracted_dataset_{time}" + f"/{image}",
+                image_path + f"/{image}",
+                img_path + f"/{image}",
             )
 
-        coco["images"] = image_list
-        coco["annotations"] = ann_items
-        coco["categories"] = cat_items
-        coco = PreProcess(self.path).set_unique_image_id(coco, 1, False)
-        coco = PreProcess(self.path).set_unique_annotation_id(coco, 1, False)
-        coco = PreProcess.set_unique_class_id(self, coco, 1, True, False)
-        PreProcess.save_coco_file(coco, f"{self.path}/extracted_dataset_{time}")
-        log = logging.getLogger()
-        log.info(f"Extracted dataset created to {self.path}/extracted_dataset_{time}")
-        return coco
+        self.coco["images"] = image_list
+        self.coco["annotations"] = ann_items
+        self.coco["categories"] = cat_items
 
-    def filter_data_by_class_name(self, coco, categories: list, image_path: str):
+        p = PreProcess(self.coco)
+        p.set_unique_annotation_id(first_id=1)
+        p.set_unique_annotation_id(first_id=1)
+        p.set_unique_class_id(first_id=0, back_grounds=True)
+        p.save_coco_file(directory=ann_path, file_name="extracted_dataset")
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info(f"Extracted dataset created to {out_path}/extracted_dataset_{time}")
+
+    def filter_data_by_class_name(self, categories: list, image_path: str, out_path: str):
         """
-        Remove categories by given list category names
-        :param coco: Coco json file to be changed
-        :param image_path: image path of data set
-        :param categories: List of chosen category's names
-        :return: Filtered json file and image save to new folder in given path directory
+        This function filter coco json file and images, then save image and json file to new folder in given path directory
+            @param categories: List of chosen categories names
+            @param image_path: Image path of data set
+            @param out_path: Output directory
         """
-        items = []
-        ann_items = []
-        cat_items = []
-        img_id = []
-        move_list_dir = []
-        image_list = []
-        for cat in coco["categories"]:
+        items, ann_items, cat_items, img_id, move_list_dir, image_list = [], [], [], [], [], []
+
+        for cat in self.coco["categories"]:
             if cat["name"] not in categories:
                 items.append(cat["id"])
                 cat_items.append(cat)
 
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             if ann["category_id"] in items:
                 ann_items.append(ann)
                 img_id.append(ann["image_id"])
         img_id = set(img_id)
-        for img in coco["images"]:
+        for img in self.coco["images"]:
             if img["id"] in img_id:
                 move_list_dir.append(img["file_name"])
                 image_list.append(img)
@@ -215,101 +208,90 @@ class PreProcess:
         time = str(datetime.datetime.now()).split(".")[0].split()
         time = "-".join(time).replace(":", "-")
 
-        os.makedirs(self.path + f"/filtered_dataset_{time}")
+        img_path = out_path + f"/filtered_dataset_{time}/images"
+        ann_path = out_path + f"/filtered_dataset_{time}/annotations"
+
+        os.makedirs(img_path)
+        os.makedirs(ann_path)
 
         for image in move_list_dir:
             shutil.copy(
-                image_path + f"/{image}", self.path + f"/filtered_dataset_{time}" + f"/{image}",
+                image_path + f"/{image}",
+                img_path + f"/{image}",
             )
 
-        coco["images"] = image_list
-        coco["annotations"] = ann_items
-        coco["categories"] = cat_items
-        coco = PreProcess(self.path).set_unique_image_id(coco, 1, False)
-        coco = PreProcess(self.path).set_unique_annotation_id(coco, 1, False)
-        coco = PreProcess.set_unique_class_id(self, coco, 1, True, False)
-        PreProcess.save_coco_file(coco, f"{self.path}/filtered_dataset_{time}")
-        log = logging.getLogger()
-        log.info(f"Filtered dataset created to {self.path}/filtered_dataset_{time}")
-        return coco
+        self.coco["images"] = image_list
+        self.coco["annotations"] = ann_items
+        self.coco["categories"] = cat_items
 
-    def box2segmentation(self, coco, inplace: bool):
+        p = PreProcess(self.coco)
+        p.set_unique_annotation_id(first_id=1)
+        p.set_unique_annotation_id(first_id=1)
+        p.set_unique_class_id(first_id=0, back_grounds=True)
+        p.save_coco_file(directory=ann_path, file_name="filtered_dataset")
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info(f"Filtered dataset created to {out_path}/filtered_dataset_{time}")
+
+    def box2segmentation(self):
         """
-        if boundary box array has a -1 value change to 1,
+        if boundary box array has a negative value change to positive,
         if annotations has no segmentation info create segmentation array
-        :param coco: Coco json file to be changed
-        :param inplace: If it's True create new coco json file to given directory
-        :return: new coco that has segmentation points that created by bbox points
         """
-        time = str(datetime.datetime.now()).split(".")[0].split()
-        time = "-".join(time).replace(":", "-")
-
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             x1, y1, x2, y2 = (
                 ann["bbox"][0],
                 ann["bbox"][1],
                 ann["bbox"][2],
                 ann["bbox"][3],
             )
-            if not ann["segmentation"]:
-                ann["segmentation"] = [[x1, y1, x1, (y1 + y2), (x1 + x2), (y1 + y2), (x1 + x2), y1,]]
-        if inplace:
-            PreProcess.save_coco_file(coco, f"{self.path}/added_segmentation_{time}")
-            log = logging.getLogger()
-            log.info(f"New json file created to {self.path}/added_segmentation_{time}")
-        return coco
+            if not ann["segmentation"] or ann["segmentation"] == []:
+                ann["segmentation"] = [[x1, y1, x1, (y1 + y2), (x1 + x2), (y1 + y2), (x1 + x2), y1]]
 
-    @staticmethod
-    def save_coco_file(coco, path_and_filename):
+    def save_coco_file(self, directory: str, file_name: str):
         """
-        :param coco: Coco json file to be changed
-        :param path_and_filename: Path with name of json file that will be saved.(Without extension .json)
-        """
-        with open(path_and_filename + ".json", "w") as fp:
-            json.dump(coco, fp)
+        This function saves coco json file to given directory named as given file name.
 
-    def remove_duplicate_image_name(self, coco, inplace: bool):
+            @param directory: The directory of coco json file to be saved
+            @param file_name: The file name of coco json file to be saved
         """
-        :param coco: Coco json file to be changed
-        :param inplace: If it's True create new coco json file to given directory
-        :return: Remove duplicate names from coco file
-        """
-        time = str(datetime.datetime.now()).split(".")[0].split()
-        time = "-".join(time).replace(":", "-")
+        with open(os.path.join(directory, f"{file_name}.json"), "w") as fp:
+            json.dump(self.coco, fp)
 
-        id_image = []
-        filename = []
-        remove_list = []
-        images = []
-        anno = []
-        for img in coco["images"]:
+    def remove_duplicate_image_name(self):
+        """
+        This function removes duplicate image names from coco json file
+        """
+        id_image, filename, remove_list, images, anno = [], [], [], [], []
+
+        for img in self.coco["images"]:
             id_image.append(img["id"])
             filename.append(img["file_name"])
+
         seen = set()
         dupes = [x for x in filename if x in seen or seen.add(x)]
-        for img in coco["images"]:
+
+        for img in self.coco["images"]:
             if img["file_name"] in dupes:
                 remove_list.append(img["id"])
                 dupes.remove(img["file_name"])
 
-        for img in coco["images"]:
+        for img in self.coco["images"]:
             if not img["id"] in remove_list:
                 images.append(img)
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             if ann["image_id"] not in remove_list:
                 anno.append(ann)
 
-        coco["annotations"] = anno
-        coco["images"] = images
-        log = logging.getLogger()
-        log.info("Deleted duplicate image count = ", len(remove_list))
-        if remove_list:
-            if inplace:
-                PreProcess.save_coco_file(coco, f"{self.path}/removed_duplicated_{time}")
-                log.info(f"New json file created to {self.path}/removed_duplicated_{time}")
+        self.coco["annotations"] = anno
+        self.coco["images"] = images
+
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("Deleted duplicate image count = " + str(len(remove_list)))
+
+        if not remove_list:
+            logging.info("There is no duplicate image name so coco json file did not change")
         else:
-            log.info("There is no duplicate name so ur file did not change and not saved to another json file")
-        return coco
+            logging.info("Duplicate names has removed")
 
     @staticmethod
     def create_random_image_name(image_base_name, path):
@@ -318,73 +300,61 @@ class PreProcess:
         photo_uuid = hash_object.hexdigest()
         return photo_uuid + ".jpeg"
 
-    def change_image_file_names(self, coco, path: str, inplace: bool):
+    def change_image_file_names(self, image_path: str, inplace: bool):
         """
-        :param coco: Coco json file to be changed
-        :param path: Path of folder that contains dataset images
-        :param inplace: If it's True create new coco json file to given directory
-        :return: Remove duplicate names from coco file
+        This function change images' file name and copy them to a new folder.
+            @param image_path: Image folder path
+            @param inplace: If inplace True save coco json file to another coco json file
         """
         time = str(datetime.datetime.now()).split(".")[0].split()
         time = "-".join(time).replace(":", "-")
 
-        if inplace:
-            os.makedirs(f"{self.path}/image_name_change_{time}/images")
-            os.makedirs(f"{self.path}/image_name_change_{time}/annotations")
+        path = Path(image_path)
+        abs_path = path.parent.absolute()
+
+        os.makedirs(f"{abs_path}/image_name_change_{time}/images")
 
         hashname_dict = {}
-        for index, img_path in enumerate(glob.glob(os.path.join(path, "*"))):
+        for index, img_path in enumerate(glob.glob(os.path.join(image_path, "*"))):
             basename = os.path.basename(img_path)
-            uuid = PreProcess.create_random_image_name(basename, path)
+            uuid = PreProcess.create_random_image_name(basename, image_path)
             hashname_dict[basename] = uuid
-            if inplace:
-                shutil.copy(
-                    img_path, f"{self.path}/image_name_change_{time}/images/{basename}",
-                )
-                os.rename(
-                    f"{self.path}/image_name_change_{time}/images/{basename}",
-                    os.path.join(f"{self.path}/image_name_change_{time}/images", uuid),
-                )
-        for image in coco["images"]:
+            shutil.copy(
+                img_path,
+                f"{abs_path}/image_name_change_{time}/images/{basename}",
+            )
+            os.rename(
+                f"{abs_path}/image_name_change_{time}/images/{basename}",
+                os.path.join(f"{abs_path}/image_name_change_{time}/images", uuid),
+            )
+
+        for image in self.coco["images"]:
             for key, values in hashname_dict.items():
                 if image["file_name"] == str(key):
                     image["file_name"] = values
         if inplace:
-            PreProcess.save_coco_file(
-                coco, f"{self.path}/image_name_change_{time}/annotations/image_name_change",
+            os.makedirs(f"{abs_path}/image_name_change_{time}/annotations")
+
+            PreProcess(self.coco).save_coco_file(
+                directory=f"{abs_path}/image_name_change_{time}/annotations", file_name="image_name_change"
             )
-            log = logging.getLogger()
-            log.info(f"New dataset folder created to {self.path}/image_name_change_{time}")
-        return coco
+            logging.getLogger().setLevel(logging.INFO)
+        logging.info(f"New dataset folder created to {abs_path}/image_name_change_{time}")
 
-    def remove_segmentation(self, coco, inplace: bool):
+    def remove_segmentation(self):
         """
-        :param coco: Coco json file to be changed
-        :param inplace: If it's True create new coco json file to given directory
-        :return: new json coco file that has no segmentation
+        This function removes segmentations information
         """
-        time = str(datetime.datetime.now()).split(".")[0].split()
-        time = "-".join(time).replace(":", "-")
-
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             del ann["segmentation"]
-        if inplace:
-            PreProcess.save_coco_file(coco, f"{self.path}/removed_segmentation_{time}")
-            log = logging.getLogger()
-            log.info(f"New json file created to {self.path}/removed_segmentation_{time}")
-        return coco
 
-    def remove_distorted_bbox(self, coco, inplace: bool):
+    def remove_distorted_bbox(self):
         """
-        :param coco: Coco json file to be changed
-        :param inplace: If it's True create new coco json file to given directory
-        :return: Remove bbox that has invalid values
+        This function remove distorted bbox information if there is any
         """
-        time = str(datetime.datetime.now()).split(".")[0].split()
-        time = "-".join(time).replace(":", "-")
         ann_list: list = []
         count = 0
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             if not (
                 len(ann["bbox"]) != 4
                 or False in [False for p in ann["bbox"] if type(p) != float and type(p) != int]
@@ -393,45 +363,30 @@ class PreProcess:
                 ann_list.append(ann)
             else:
                 count += 1
-        coco["annotations"] = ann_list
-        if inplace:
-            if count != 0:
-                PreProcess.save_coco_file(coco, f"{self.path}/removed_distorted_bbox_{time}")
-                log = logging.getLogger()
-                log.info(f"New json file created to {self.path}/removed_distorted_bbox_{time}")
-            else:
-                log = logging.getLogger()
-                log.info("There is no distorted bbox so ur file did not change and saved to another json file")
-        return coco
+        self.coco["annotations"] = ann_list
+        if count != 0:
+            logging.getLogger().setLevel(logging.INFO)
+            logging.info("Annotations that has distorted bbox information has removed")
+        else:
+            logging.getLogger().setLevel(logging.INFO)
+            logging.info("There is no distorted bbox so coco json file did not change")
 
-    def reader(self) -> Dict:
-        """
-        :return: coco json file
-        """
-        log = logging.getLogger()
-        assert os.path.isfile(self.path), log.error(" Invalid json file path.Please check your directory")
-
-        with open(self.path) as f:
-            cfg = json.load(f)
-            return Dict(cfg)
-
-    @staticmethod
     def train_test_validation_split(
-        coco_file_path,
+        self,
         image_path: str,
         test_percent: int,
         validation_percent: int,
         out_path: str,
     ):
         """
-        :param coco_file_path: Coco json file path
-        :param image_path: Path of folder that contains dataset images
-        :param test_percent:Test split percent
-        :param validation_percent: Validation split percent
-        :param out_path: Output path
-        :return: Return spoiled train test validation datasets
-        """
+        This function split dataset according to test, validation percent and save them to given output path.
 
+            @param image_path: Path of folder that contains dataset images
+            @param test_percent: Test split percent
+            @param validation_percent: Validation split percent
+            @param out_path: Output path
+            @return: Return spoiled train test validation datasets as tuple
+        """
         time = str(datetime.datetime.now()).split(".")[0].split()
         time = "-".join(time).replace(":", "-")
 
@@ -471,54 +426,55 @@ class PreProcess:
         ) = ([], [], [], [], [], [], [], [])
         list_split = [train, test, validation]
 
-        coco = PreProcess(coco_file_path).reader()
-        PreProcess.check_id_unique(coco)
+        p = PreProcess(self.coco)
+        if not p.check_id_unique():
+            assert False, "Id not unique"
 
-        len_images = len(coco["images"])
+        len_images = len(self.coco["images"])
         len_test = int(len_images * test_percent / 100)
         len_validation = int(len_images * validation_percent / 100)
         len_train = len_images - (len_test + len_validation)
 
-        log = logging.getLogger()
-        log.info("Train image count :" + str(len_train))
-        log.info("Test image count :" + str(len_test))
-        log.info("Validation image count :" + str(len_validation))
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("Train image count :" + str(len_train))
+        logging.info("Test image count :" + str(len_test))
+        logging.info("Validation image count :" + str(len_validation))
 
         answer = input("Do you want to split datasets?  [yes/ no]: ")
         if any(answer.lower() == f for f in ["no", "n", "0"]):
             test_p = input("Please choose test percent : %")
             val_p = input("Please choose val percent : %")
-            return PreProcess.train_test_validation_split(coco_file_path, image_path, int(test_p), int(val_p), out_path)
+            return PreProcess.train_test_validation_split(self, image_path, int(test_p), int(val_p), out_path)
 
         for elem in list_split:
-            elem["categories"] = coco["categories"]
-            elem["licenses"] = coco["licenses"]
-            elem["info"] = coco["info"]
+            elem["categories"] = self.coco["categories"]
+            elem["licenses"] = self.coco["licenses"]
+            elem["info"] = self.coco["info"]
 
         for i in tqdm(range(len_test + len_validation)):
             x = random.randint(0, (len_test + len_validation))
             while x in random_list:
-                x = random.randint(0, len(coco["images"]) - 1)
+                x = random.randint(0, len(self.coco["images"]) - 1)
             random_list.append(x)
 
             if i < len_validation:
-                validation["images"] += [coco["images"][x]]
-                img_id_val.append(coco["images"][x]["id"])
-                list_dir_validation.append(coco["images"][x]["file_name"])
-                id_train.append(coco["images"][x]["id"])
+                validation["images"] += [self.coco["images"][x]]
+                img_id_val.append(self.coco["images"][x]["id"])
+                list_dir_validation.append(self.coco["images"][x]["file_name"])
+                id_train.append(self.coco["images"][x]["id"])
             else:
-                test["images"] += [coco["images"][x]]
-                img_id_test.append(coco["images"][x]["id"])
-                list_dir_test.append(coco["images"][x]["file_name"])
-                id_train.append(coco["images"][x]["id"])
+                test["images"] += [self.coco["images"][x]]
+                img_id_test.append(self.coco["images"][x]["id"])
+                list_dir_test.append(self.coco["images"][x]["file_name"])
+                id_train.append(self.coco["images"][x]["id"])
 
-        for img in tqdm(coco["images"]):
+        for img in tqdm(self.coco["images"]):
             if img["id"] not in id_train:
                 train["images"] += [img]
                 list_dir_train.append(img["file_name"])
                 img_id_train.append(img["id"])
 
-        for ann in tqdm(coco["annotations"]):
+        for ann in tqdm(self.coco["annotations"]):
             if ann["image_id"] in img_id_train:
                 train["annotations"] += [ann]
             if ann["image_id"] in img_id_test:
@@ -527,7 +483,7 @@ class PreProcess:
                 validation["annotations"] += [ann]
 
         os.makedirs(exit_path + "/train/annotations"), os.makedirs(exit_path + "/train/images")
-        p = PreProcess(out_path)
+        p = PreProcess(test)
         if len_test != 0:
             os.makedirs(exit_path + "/test/images"), os.makedirs(exit_path + "/test/annotations")
 
@@ -536,17 +492,19 @@ class PreProcess:
                     image_path + f"/{image}",
                     exit_path + "/test/images" + f"/{image}",
                 )
-            test = p.set_unique_annotation_id(test, 1, False)
-            test = p.set_unique_image_id(test, 1, False)
-            PreProcess.save_coco_file(test, exit_path + "/test/annotations/" + "test")
+            p.set_unique_annotation_id(first_id=1)
+            p.set_unique_image_id(first_id=1)
+            p.save_coco_file(directory=exit_path + "/test/annotations/", file_name="test")
+
         for image in list_dir_train:
             shutil.copy(
                 image_path + f"/{image}",
                 exit_path + "/train/images" + f"/{image}",
             )
-        train = p.set_unique_annotation_id(train, 1, False)
-        train = p.set_unique_image_id(train, 1, False)
-        PreProcess.save_coco_file(train, exit_path + "/train/annotations/" + "train")
+        p = PreProcess(train)
+        p.set_unique_annotation_id(first_id=1)
+        p.set_unique_image_id(first_id=1)
+        p.save_coco_file(directory=exit_path + "/train/annotations/", file_name="train")
 
         if len_validation != 0:
             os.makedirs(exit_path + "/validation/images"), os.makedirs(exit_path + "/validation/annotations")
@@ -556,94 +514,80 @@ class PreProcess:
                     image_path + f"/{image}",
                     exit_path + "/validation/images" + f"/{image}",
                 )
-            validation = p.set_unique_annotation_id(validation, 1, False)
-            validation = p.set_unique_image_id(validation, 1, False)
-            PreProcess.save_coco_file(
-                validation,
-                exit_path + "/validation/annotations/" + "validation",
-            )
-        log.info("Data split Done!")
-        log.info(f" Data saved to {exit_path}")
+            p = PreProcess(validation)
+            p.set_unique_annotation_id(first_id=1)
+            p.set_unique_image_id(first_id=1)
+            p.save_coco_file(directory=exit_path + "/validation/annotations/", file_name="validation")
+        logging.info("Data split Done!")
+        logging.info(f" Data saved to {exit_path}")
 
         return train, test, validation
 
-    def unite_classes(self, coco: any, class_names: list, new_class_name, inplace: bool):
+    def unite_classes(self, class_names: list, new_class_name: str):
         """
         This function unite given classes in a class. And return new coco json file
-        :param coco: Coco json file
-        :param class_names: List of class names
-        :param new_class_name: Name of class name to be created
-        :param inplace: If it's True create new coco json file to given directory
-        :return: Coco json file
-        """
-        time = str(datetime.datetime.now()).split(".")[0].split()
-        time = "-".join(time).replace(":", "-")
 
+            @param class_names: List of class names
+            @param new_class_name: Name of class name to be created
+            @return:
+        """
         classes: list = []
         class_id: list = []
 
-        for cat in coco["categories"]:
+        for cat in self.coco["categories"]:
             if cat["name"] not in class_names:
                 classes.append(cat)
             else:
                 class_id.append(cat["id"])
 
-        max_id = coco["categories"][-1]["id"]
+        max_id = self.coco["categories"][-1]["id"]
 
         # get unique id
         class_id = list(set(class_id))
 
         # unite classes in one class
-        classes += [
-            {
-                "id": f"{max_id + 1}",
-                "name": f"{new_class_name}",
-                "supercategory": ""
-            }
-        ]
+        classes += [{"id": f"{max_id + 1}", "name": f"{new_class_name}", "supercategory": ""}]
 
         # set new class id
-        for ann in coco["annotations"]:
+        for ann in self.coco["annotations"]:
             if ann["category_id"] in class_id:
                 ann["category_id"] = f"{max_id + 1}"
 
         # change categories
-        coco["categories"] = classes
+        self.coco["categories"] = classes
 
         # set unique id
-        coco = PreProcess(self.path).set_unique_class_id(coco, 0, False, False)
-
-        # save if inplace True
-        if inplace:
-            PreProcess.save_coco_file(coco, f"{self.path}/unite_classes_{time}")
-            log = logging.getLogger()
-            log.info(f"New json file created to {self.path}/unite_classes_{time}")
-
-        return coco
+        p = PreProcess(self.coco)
+        p.set_unique_class_id(first_id=0, back_grounds=True)
 
     @staticmethod
     def image_split(image_path: str, test_percent: int, val_percent: int):
         """
-        :param image_path: Path of folder that obtain images
-        :param test_percent: Image split test percent
-        :param val_percent: Image split val percent
-        :return: Create train test val image folders
+        This function split images according to test validation percent into a new folder
+            @param image_path: Path of folder that obtain images
+            @param test_percent: Image split test percent
+            @param val_percent: Image split val percent
         """
+
         time = str(datetime.datetime.now()).split(".")[0].split()
         time = "-".join(time).replace(":", "-")
+
         random_list: list = []
 
         parent_path = os.path.abspath(os.path.join(image_path, os.pardir))
         list_images = os.listdir(image_path)
-        len_images = len(list_images)
 
+        len_images = len(list_images)
         len_test = int(len_images * test_percent / 100)
         len_validation = int(len_images * val_percent / 100)
 
         os.makedirs(parent_path + f"/train-{time}"), os.makedirs(parent_path + f"/test-{time}")
         os.makedirs(parent_path + f"/val-{time}")
-        train_path, test_path, val_path = (parent_path + f"/train-{time}", parent_path + f"/test-{time}",
-                                           parent_path + f"/val-{time}")
+        train_path, test_path, val_path = (
+            parent_path + f"/train-{time}",
+            parent_path + f"/test-{time}",
+            parent_path + f"/val-{time}",
+        )
 
         for i in tqdm(range(len_test + len_validation)):
             x = random.randint(0, (len_test + len_validation))
@@ -661,3 +605,45 @@ class PreProcess:
         for image in list_images:
             shutil.copy(image_path + f"/{image}", train_path + f"/{image}")
 
+    def reduce_class(self, img_count: int):
+        """
+        This function reduce image count according to given integer parameter.
+        It sorts image by annotation size and pick first "img_count" images.
+            @param img_count: Max image count
+        """
+
+        ann_info: dict = {}
+        image_id: list = []
+        image_list: list = []
+        ann_list: list = []
+
+        for ann in self.coco["annotations"]:
+            if ann["category_id"] not in list(ann_info.keys()):
+                ann_info[ann["category_id"]] = {}
+
+        for ann in self.coco["annotations"]:
+            for elem in ann_info:
+                if elem == ann["category_id"]:
+                    if ann["image_id"] not in ann_info[elem]:
+                        ann_info[elem][ann["image_id"]] = 1
+                    else:
+                        ann_info[elem][ann["image_id"]] += 1
+
+        for key, _ in ann_info.items():
+            sort_list = sorted(ann_info[key].items(), key=lambda item: item[1])
+            sort_list.reverse()
+            for x in range(0, img_count, 1):
+                image_id.append(sort_list[x][0])
+
+        set(image_id)
+
+        for image in self.coco["images"]:
+            if image["id"] in image_id:
+                image_list.append(image)
+
+        for ann in self.coco["annotations"]:
+            if ann["image_id"] in image_id:
+                ann_list.append(ann)
+
+        self.coco["images"] = image_list
+        self.coco["annotations"] = ann_list
