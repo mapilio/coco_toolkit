@@ -13,21 +13,6 @@ from addict import Dict
 from tqdm import tqdm
 
 
-def reader(path: str) -> Dict:
-    """
-    This function read coco json file as a dictionary.
-
-        @param path: Coco json file path to be read
-        @return: Return coco json file as a dictionary
-    """
-    log = logging.getLogger()
-    assert os.path.isfile(path), log.error(" Invalid json file path.Please check your directory")
-
-    with open(path) as f:
-        cfg = json.load(f)
-        return Dict(cfg)
-
-
 class PreProcess:
     """
     Preprocess class for preparing coco json dataset for Training.
@@ -38,6 +23,21 @@ class PreProcess:
         @param coco: Coco json file to be processed
         """
         self.coco = coco.copy()
+
+    @staticmethod
+    def reader(path: str) -> Dict:
+        """
+        This function read coco json file as a dictionary.
+
+            @param path: Coco json file path to be read
+            @return: Return coco json file as a dictionary
+        """
+        log = logging.getLogger()
+        assert os.path.isfile(path), log.error(" Invalid json file path.Please check your directory")
+
+        with open(path) as f:
+            cfg = json.load(f)
+            return Dict(cfg)
 
     def set_unique_image_id(self, first_id: int):
         """
@@ -131,7 +131,8 @@ class PreProcess:
 
     def extrack_data_by_class_name(self, categories: list, image_path: str, out_path: str):
         """
-        This function export coco json file and images, then save image and json file to new folder in given path directory
+        This function export coco json file and images, then save image
+         and json file to new folder in given path directory
             @param categories: List of chosen categories names
             @param image_path: Image path of data set
             @param out_path: Output directory
@@ -183,7 +184,8 @@ class PreProcess:
 
     def filter_data_by_class_name(self, categories: list, image_path: str, out_path: str):
         """
-        This function filter coco json file and images, then save image and json file to new folder in given path directory
+        This function filter coco json file and images,
+         then save image and json file to new folder in given path directory
             @param categories: List of chosen categories names
             @param image_path: Image path of data set
             @param out_path: Output directory

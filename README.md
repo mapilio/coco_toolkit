@@ -111,7 +111,7 @@ This function read given coco json file path . It returns coco json file as a di
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 
 ```
 ##### set_unique_image_id
@@ -122,7 +122,7 @@ parameter first_id: First image id value
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 p.set_unique_image_id(first_id=1)
 p.coco # Processed coco json file 
@@ -136,7 +136,7 @@ parameter b_grounds: If it's True add backgrounds to categories if there is no b
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 p.set_unique_class_id(first_id=1-0, back_grounds=True)
 p.coco # Processed coco json file 
@@ -149,7 +149,7 @@ parameter first_id: First image id value
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 p.set_unique_annotation_id(first_id=0-1)
 p.coco # Processed coco json file 
@@ -161,7 +161,7 @@ if id not unique return False
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 result = p.check_id_unique() # Return False or True
 ```
@@ -176,7 +176,7 @@ parameter out_path: Output directory
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 img_path = "coco_dataset/images"
 out_path = os.getcwd()
 p = PreProcess(coco)
@@ -199,7 +199,7 @@ parameter out_path: Output directory
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 img_path = "coco_dataset/images"
 out_path = os.getcwd()
 p = PreProcess(coco)
@@ -218,7 +218,7 @@ This function remove segmentations from annotations. Return updated coco json fi
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 p.remove_segmentation()
 p.coco # Processed coco json file 
@@ -231,7 +231,7 @@ This function remove distorted bbox from annotations.
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 p.remove_distorted_bbox()
 p.coco # Processed coco json file 
@@ -242,7 +242,7 @@ This function create segmentation list from bbox to annotations if there is no s
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 p.box2segmentation()
 p.coco # Processed coco json file 
@@ -256,7 +256,7 @@ parameter file_name: The file name of coco json file to be saved(without extenci
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 dir_ = os.getcwd()
 f_name = "test_save"
@@ -268,7 +268,7 @@ This function if there is a duplicate image name in coco json file remove duplic
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 p.remove_duplicate_image_name()
 p.coco # Processed coco json file 
@@ -283,7 +283,7 @@ parameter inplace: If it's True create new coco json file to given directory
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 img_path = "coco_dataset/images"
 p.change_image_file_names(image_path=img_path, inplace=True)
@@ -300,7 +300,7 @@ parameter out_path: Output path
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 img_path = "coco_dataset/images"
 output_path = "/home/documents"
@@ -316,7 +316,7 @@ This function unite given classes in a class.
 For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 p = PreProcess(coco)
 class_name_list = ["stop", "trafficlight", "crosswalk"]
 new_class_name = "Road Sign"
@@ -366,7 +366,7 @@ parameter category: Category name
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 count = AnalyzeCategories(coco).given_category_count("crosswalk")
 ```
 ##### class_names
@@ -375,7 +375,7 @@ This function return list of class names .
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 class_name_list = AnalyzeCategories(coco).class_names()
 ```
 ##### total_class_count
@@ -384,7 +384,7 @@ This function return class count.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 count = AnalyzeCategories(coco).total_class_count()
 ```
 
@@ -394,7 +394,7 @@ This function return class names as  tuple that has annotation.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 tuple = AnalyzeCategories(coco).classes_have_annotations_tuple()
 ```
 ##### plot_class_pie_chart
@@ -405,7 +405,7 @@ parameter visualize: If it's True visualize pie chart.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 AnalyzeCategories(coco).plot_class_pie_chart(visualize=True)
 ```
 ##### images_aspect_ratio
@@ -414,7 +414,7 @@ This function return image dataset aspect ratio as dictionary.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 info_dictionary = AnalyzeCategories(coco).images_aspect_ratio()
 ```
 
@@ -425,7 +425,7 @@ ratio which is has max count.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 info_dictionary = AnalyzeCategories(coco).bbox_aspect_ratio()
 ```
 
@@ -435,7 +435,7 @@ This function return list of  class names that has annotation.
  For example:
 ```bash
 path = "coco_dataset/annotations/coco.json"
-coco = reader(path)
+coco = PreProcess.reader(path)
 list_class_names = AnalyzeCategories(coco).class_have_ann_list()
 ```
 
