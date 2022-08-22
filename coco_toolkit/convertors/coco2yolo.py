@@ -80,5 +80,3 @@ def convert_coco_json_to_yolo_txt(json_file, output_path="output"):
                 f.write(f"{category} {x:.6f} {y:.6f} {w:.6f} {h:.6f}\n")
 
     print("Converting COCO Json to YOLO txt finished!")
-
-
