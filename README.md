@@ -31,6 +31,8 @@ This function filter given class names. It returns filtered coco json as diction
 `
 PreProcess(path).export_according2_class(coco, categories, image_path)`
 
+#### 2.2 Coco2Yolo convertor
+`convert_coco_json_to_yolo_txt(json_file="tests/coco_dataset/annotations/coco.json", output_path="deneme")`
 
 parameter path : This parameter is directory of output.Function saves
 filtered dataset in this path.
