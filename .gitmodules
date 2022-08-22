@@ -1,0 +1,6 @@
+[submodule "coco_toolkit/modules/draw-YOLO-box"]
+	path = coco_toolkit/modules/draw-YOLO-box
+	url = https://github.com/waittim/draw-YOLO-box
+[submodule "coco_toolkit/modules/coco-viewer"]
+	path = coco_toolkit/modules/coco-viewer
+	url = https://github.com/trsvchn/coco-viewer.git
