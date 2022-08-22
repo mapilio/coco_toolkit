@@ -3,7 +3,7 @@ import math
 
 import matplotlib.pyplot as plt
 
-from coco_toolkit.modules.cocoviewer import main
+from coco_toolkit.modules.coco_viewer.cocoviewer import main
 
 
 class AnalyzeCategories:

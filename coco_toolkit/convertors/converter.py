@@ -4,7 +4,7 @@ import os
 import shutil
 
 from coco_toolkit.helper.preprocess import PreProcess
-from coco_toolkit.modules.voc2coco import main
+from coco_toolkit.convertors.voc2coco import main
 
 
 def voc2coco(data_xml_folder_path: str, output_path: str, image_path: str):
