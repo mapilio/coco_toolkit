@@ -5,15 +5,15 @@ import random
 import cv2
 
 # 全局变量进行路径配置
-label_folder = "./labels/"  # 检测结果存放文件夹labels路径
+label_folder = "coco_toolkit/modules/yolo_viewer/labels/"  # 检测结果存放文件夹labels路径
 
-raw_images_folder = "./raw_images/"  # 检查图片存放文件夹raw_images路径
+raw_images_folder = "coco_toolkit/modules/yolo_viewer/raw_images/"  # 检查图片存放文件夹raw_images路径
 
-save_images_folder = "./save_image/"  # 保存图片文件夹save_image路径
+save_images_folder = "coco_toolkit/modules/yolo_viewer/save_image/"  # 保存图片文件夹save_image路径
 
-name_list_path = "./name_list.txt"  # 里面有检测图片名称txt文件路径
+name_list_path = "coco_toolkit/modules/yolo_viewer/name_list.txt"  # 里面有检测图片名称txt文件路径
 
-classes_path = "./classes.txt"
+classes_path = "coco_toolkit/modules/yolo_viewer/classes.txt"
 
 list_dir = os.listdir(raw_images_folder)
 file_type = list_dir[0].split(".")[-1]
