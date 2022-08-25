@@ -9,10 +9,9 @@ from coco_toolkit.modules.cocoviewer import main
 class AnalyzeCategories:
     def __init__(self, coco: any):
         """
-        :param coco: Json file
-        :return:
+        :param coco: Coco json file
         """
-        self.coco = coco
+        self.coco = coco.copy()
 
     def get_class_info(self):
         class_id = {}
@@ -42,8 +41,8 @@ class AnalyzeCategories:
         :return: Return count of given category.
         """
         category_info, _, _ = AnalyzeCategories.get_class_info(self)
-        log = logging.getLogger()
-        log.info("{} count =%s".format(category), category_info[category])
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("{} count =%s".format(category), category_info[category])
         return category_info[category]
 
     def class_names(self):
@@ -51,8 +50,8 @@ class AnalyzeCategories:
         :return: List of class names
         """
         _, _, unique = AnalyzeCategories.get_class_info(self)
-        log = logging.getLogger()
-        log.info("class names =%s", list(unique.keys()))
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("class names =%s", list(unique.keys()))
         return list(unique.keys())
 
     def total_class_count(self):
@@ -60,8 +59,8 @@ class AnalyzeCategories:
         :return: Total class count
         """
         _, _, unique = AnalyzeCategories.get_class_info(self)
-        log = logging.getLogger()
-        log.info("total class =%s", len(unique))
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("total class =%s", len(unique))
         return len(unique)
 
     def classes_have_annotations_tuple(self):
@@ -69,15 +68,18 @@ class AnalyzeCategories:
         :return: Return class names that has annotation info
         """
         _, not_zero, _ = AnalyzeCategories.get_class_info(self)
-        log = logging.getLogger()
-        log.info("class names =%s", tuple(not_zero.keys()))
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("class names =%s", tuple(not_zero.keys()))
         return tuple(not_zero.keys())
 
     def plot_class_pie_chart(self, visualize: bool):
         _, data, total = AnalyzeCategories.get_class_info(self)
         plt.figure(figsize=(15, 15))
         plt.pie(
-            list(data.values()), labels=list(data.keys()), autopct="%1.1f%%", rotatelabels=90,
+            list(data.values()),
+            labels=list(data.keys()),
+            autopct="%1.1f%%",
+            rotatelabels=90,
         )
         plt.legend(loc="lower right")
         plt.title("Pie Chart Categories", fontsize=40)
@@ -111,8 +113,8 @@ class AnalyzeCategories:
             else:
                 aspect_ratio_dict[aspect_r] = 1
                 list_ratios.append(aspect_r)
-        log = logging.getLogger()
-        log.info("image aspect ratio = %s", aspect_ratio_dict)
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("image aspect ratio = %s", aspect_ratio_dict)
         return aspect_ratio_dict
 
     def bbox_aspect_ratio(self):
@@ -146,8 +148,8 @@ class AnalyzeCategories:
             else:
                 aspect_ratio_dict[aspect_r] = 1
                 list_ratios.append(aspect_r)
-        log = logging.getLogger()
-        log.info("bbox aspect ratio = %s", list(sorted(aspect_ratio_dict.items(), key=lambda item: item[1]))[-3::])
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("bbox aspect ratio = %s", list(sorted(aspect_ratio_dict.items(), key=lambda item: item[1]))[-3::])
         return list(sorted(aspect_ratio_dict.items(), key=lambda item: item[1]))[-3::]
 
     @staticmethod
@@ -159,6 +161,6 @@ class AnalyzeCategories:
         :return: Return class names that has annotation info
         """
         _, not_zero, _ = AnalyzeCategories.get_class_info(self)
-        log = logging.getLogger()
-        log.info("class names = %s", list(not_zero.keys()))
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info("class names = %s", list(not_zero.keys()))
         return list(not_zero.keys())

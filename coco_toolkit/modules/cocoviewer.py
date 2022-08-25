@@ -21,10 +21,20 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 parser = argparse.ArgumentParser(description="View images with bboxes from the COCO dataset")
 parser.add_argument(
-    "-i", "--images", default="", type=str, metavar="PATH", help="path to images folder",
+    "-i",
+    "--images",
+    default="",
+    type=str,
+    metavar="PATH",
+    help="path to images folder",
 )
 parser.add_argument(
-    "-a", "--annotations", default="", type=str, metavar="PATH", help="path to annotations json file",
+    "-a",
+    "--annotations",
+    default="",
+    type=str,
+    metavar="PATH",
+    help="path to annotations json file",
 )
 
 
@@ -126,7 +136,12 @@ def prepare_colors(n_objects: int, shuffle: bool = True) -> list:
     # Get some colors
     hsv_tuples = [(x / n_objects, 1.0, 1.0) for x in range(n_objects)]
     colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
-    colors = list(map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)), colors,))
+    colors = list(
+        map(
+            lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)),
+            colors,
+        )
+    )
 
     # Shuffle colors
     if shuffle:
@@ -141,7 +156,12 @@ def get_categories(instances: dict) -> dict:
     """Extracts categories from annotations file and prepares color for each one."""
     # Parse categories
     colors = prepare_colors(n_objects=700, shuffle=True)
-    categories = list(zip([[category["id"], category["name"]] for category in instances["categories"]], colors,))
+    categories = list(
+        zip(
+            [[category["id"], category["name"]] for category in instances["categories"]],
+            colors,
+        )
+    )
     categories = dict([[cat[0][0], [cat[0][1], cat[1]]] for cat in categories])
     return categories
 
@@ -150,7 +170,12 @@ def draw_bboxes(draw, objects, labels, obj_categories, ignore, width, label_size
     """Puts rectangles on the image."""
     # Extracting bbox coordinates
     bboxes = [
-        [obj["bbox"][0], obj["bbox"][1], obj["bbox"][0] + obj["bbox"][2], obj["bbox"][1] + obj["bbox"][3],]
+        [
+            obj["bbox"][0],
+            obj["bbox"][1],
+            obj["bbox"][0] + obj["bbox"][2],
+            obj["bbox"][1] + obj["bbox"][3],
+        ]
         for obj in objects
     ]
     # Draw bboxes
@@ -262,7 +287,14 @@ class ImagePanel(ttk.Frame):
         self.bg = "gray15"
         self.pack(fill=tk.BOTH, expand=True)
 
-        self._canvas = tk.Canvas(parent, width=width, height=height, bg=self.bg, relief="sunken", borderwidth=2,)
+        self._canvas = tk.Canvas(
+            parent,
+            width=width,
+            height=height,
+            bg=self.bg,
+            relief="sunken",
+            borderwidth=2,
+        )
         self.hscroll = ttk.Scrollbar(parent, command=self._canvas.xview, orient=tk.HORIZONTAL)
         self.vscroll = ttk.Scrollbar(parent, command=self._canvas.yview)
         self._canvas.configure(xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set)
@@ -270,13 +302,34 @@ class ImagePanel(ttk.Frame):
         self.rowconfigure(0, weight=1, minsize=0)
         self.columnconfigure(0, weight=1, minsize=0)
         self._canvas.grid(
-            padx=1, in_=self, pady=1, row=0, column=0, rowspan=1, columnspan=1, sticky=tk.NSEW,
+            padx=1,
+            in_=self,
+            pady=1,
+            row=0,
+            column=0,
+            rowspan=1,
+            columnspan=1,
+            sticky=tk.NSEW,
         )
         self.vscroll.grid(
-            padx=1, in_=self, pady=1, row=0, column=1, rowspan=1, columnspan=1, sticky=tk.NSEW,
+            padx=1,
+            in_=self,
+            pady=1,
+            row=0,
+            column=1,
+            rowspan=1,
+            columnspan=1,
+            sticky=tk.NSEW,
         )
         self.hscroll.grid(
-            padx=1, in_=self, pady=1, row=1, column=0, rowspan=1, columnspan=1, sticky=tk.NSEW,
+            padx=1,
+            in_=self,
+            pady=1,
+            row=1,
+            column=0,
+            rowspan=1,
+            columnspan=1,
+            sticky=tk.NSEW,
         )
 
         self.reset()
@@ -292,7 +345,12 @@ class ImagePanel(ttk.Frame):
             self.bg = bg
         self._canvas.config(
             bg=bg,
-            scrollregion=(-self.canvwidth // 2, -self.canvheight // 2, self.canvwidth // 2, self.canvheight // 2,),
+            scrollregion=(
+                -self.canvwidth // 2,
+                -self.canvheight // 2,
+                self.canvwidth // 2,
+                self.canvheight // 2,
+            ),
         )
         self._canvas.xview_moveto(0.5 * (self.canvwidth - self.width + 30) / self.canvwidth)
         self._canvas.yview_moveto(0.5 * (self.canvheight - self.height + 30) / self.canvheight)
@@ -308,13 +366,27 @@ class ImagePanel(ttk.Frame):
 
         if cwidth < self.canvwidth:
             self.hscroll.grid(
-                padx=1, in_=self, pady=1, row=1, column=0, rowspan=1, columnspan=1, sticky=tk.NSEW,
+                padx=1,
+                in_=self,
+                pady=1,
+                row=1,
+                column=0,
+                rowspan=1,
+                columnspan=1,
+                sticky=tk.NSEW,
             )
         else:
             self.hscroll.grid_forget()
         if cheight < self.canvheight:
             self.vscroll.grid(
-                padx=1, in_=self, pady=1, row=0, column=1, rowspan=1, columnspan=1, sticky=tk.NSEW,
+                padx=1,
+                in_=self,
+                pady=1,
+                row=0,
+                column=1,
+                rowspan=1,
+                columnspan=1,
+                sticky=tk.NSEW,
             )
         else:
             self.vscroll.grid_forget()
@@ -405,18 +477,24 @@ class ObjectsPanel(ttk.PanedWindow):
 
         # Categories subpanel
         self.category_subpanel = ttk.Frame()
-        ttk.Label(self.category_subpanel, text="categories", borderwidth=2, background="gray50",).pack(
-            side=tk.TOP, fill=tk.X
-        )
+        ttk.Label(
+            self.category_subpanel,
+            text="categories",
+            borderwidth=2,
+            background="gray50",
+        ).pack(side=tk.TOP, fill=tk.X)
         self.category_box = tk.Listbox(self.category_subpanel, selectmode=tk.EXTENDED, exportselection=0)
         self.category_box.pack(side=tk.TOP, fill=tk.Y, expand=True)
         self.add(self.category_subpanel)
 
         # Objects subpanel
         self.object_subpanel = ttk.Frame()
-        ttk.Label(self.object_subpanel, text="objects", borderwidth=2, background="gray50",).pack(
-            side=tk.TOP, fill=tk.X
-        )
+        ttk.Label(
+            self.object_subpanel,
+            text="objects",
+            borderwidth=2,
+            background="gray50",
+        ).pack(side=tk.TOP, fill=tk.X)
         self.object_box = tk.Listbox(self.object_subpanel, selectmode=tk.EXTENDED, exportselection=0)
         self.object_box.pack(side=tk.TOP, fill=tk.Y, expand=True)
         self.add(self.object_subpanel)
@@ -428,15 +506,36 @@ class SlidersBar(ttk.Frame):
         self.pack(side=tk.BOTTOM, fill=tk.X)
 
         # Bbox thickness controller
-        self.bbox_slider = tk.Scale(self, label="bbox", from_=0, to=25, tickinterval=5, orient=tk.HORIZONTAL,)
+        self.bbox_slider = tk.Scale(
+            self,
+            label="bbox",
+            from_=0,
+            to=25,
+            tickinterval=5,
+            orient=tk.HORIZONTAL,
+        )
         self.bbox_slider.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Label text size controller
-        self.label_slider = tk.Scale(self, label="label", from_=10, to=100, tickinterval=25, orient=tk.HORIZONTAL,)
+        self.label_slider = tk.Scale(
+            self,
+            label="label",
+            from_=10,
+            to=100,
+            tickinterval=25,
+            orient=tk.HORIZONTAL,
+        )
         self.label_slider.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Mask transparency controller
-        self.mask_slider = tk.Scale(self, label="mask", from_=0, to=255, tickinterval=50, orient=tk.HORIZONTAL,)
+        self.mask_slider = tk.Scale(
+            self,
+            label="mask",
+            from_=0,
+            to=255,
+            tickinterval=50,
+            orient=tk.HORIZONTAL,
+        )
         self.mask_slider.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
 
@@ -475,19 +574,29 @@ class Controller:
         self.menu.file.entryconfigure("Save", command=self.save_image)
         self.menu.file.entryconfigure("Exit", command=self.exit)
         self.menu.view.entryconfigure(
-            "BBoxes", variable=self.bboxes_on_global, command=self.menu_view_bboxes,
+            "BBoxes",
+            variable=self.bboxes_on_global,
+            command=self.menu_view_bboxes,
         )
         self.menu.view.entryconfigure(
-            "Labels", variable=self.labels_on_global, command=self.menu_view_labels,
+            "Labels",
+            variable=self.labels_on_global,
+            command=self.menu_view_labels,
         )
         self.menu.view.entryconfigure(
-            "Masks", variable=self.masks_on_global, command=self.menu_view_masks,
+            "Masks",
+            variable=self.masks_on_global,
+            command=self.menu_view_masks,
         )
         self.menu.view.colormenu.entryconfigure(
-            "Categories", variable=self.coloring_on_global, command=self.menu_view_coloring,
+            "Categories",
+            variable=self.coloring_on_global,
+            command=self.menu_view_coloring,
         )
         self.menu.view.colormenu.entryconfigure(
-            "Objects", variable=self.coloring_on_global, command=self.menu_view_coloring,
+            "Objects",
+            variable=self.coloring_on_global,
+            command=self.menu_view_coloring,
         )
         self.root.configure(menu=self.menu)
 
@@ -555,7 +664,13 @@ class Controller:
         # Draw bounding boxes
         if bboxes_on:
             draw_bboxes(
-                draw, objects, labels_on, names_colors, ignore, width, label_size,
+                draw,
+                objects,
+                labels_on,
+                names_colors,
+                ignore,
+                width,
+                label_size,
             )
         del draw
         # Resulting image
@@ -569,7 +684,13 @@ class Controller:
         coloring = self.coloring_on_local if local else self.coloring_on_global.get()
 
         # Prepare image
-        (full_path, objects, names_colors, img_obj_categories, img_categories,) = self.data.prepare_image(coloring)
+        (
+            full_path,
+            objects,
+            names_colors,
+            img_obj_categories,
+            img_categories,
+        ) = self.data.prepare_image(coloring)
         self.current_img_obj_categories = img_obj_categories
         self.current_img_categories = img_categories
 
@@ -644,7 +765,9 @@ class Controller:
         # By default save as png file
         defaultextension = ".png"
         file = filedialog.asksaveasfilename(
-            initialfile=initialfile, filetypes=filetypes, defaultextension=defaultextension,
+            initialfile=initialfile,
+            filetypes=filetypes,
+            defaultextension=defaultextension,
         )
         # If not canceled:
         if file:
@@ -825,5 +948,6 @@ def main(img_path, json_path):
 
 if __name__ == "__main__":
     main(
-        img_path="tests/coco_dataset/images/", json_path="tests/coco_dataset/annotations/coco.json",
+        img_path="tests/coco_dataset/images/",
+        json_path="tests/coco_dataset/annotations/coco.json",
     )
