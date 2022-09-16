@@ -51,7 +51,7 @@ def make_folders(path="output"):
     return path
 
 
-def convert_coco_json_to_yolo_txt(json_file, output_path="output"):
+def coco_to_yolo(json_file, output_path="output"):
     path = make_folders(output_path)
 
     with open(json_file) as f:

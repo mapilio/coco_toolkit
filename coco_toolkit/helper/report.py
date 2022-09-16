@@ -3,7 +3,7 @@ import math
 
 import matplotlib.pyplot as plt
 
-from coco_toolkit.modules.coco_viewer.cocoviewer import main
+from coco_toolkit.modules.coco_viewer.cocoviewer import cocoviewer
 
 
 class AnalyzeCategories:
@@ -154,7 +154,7 @@ class AnalyzeCategories:
 
     @staticmethod
     def coco_viewer(image_path, json_path):
-        return main(image_path, json_path)
+        return cocoviewer(image_path, json_path)
 
     def class_have_ann_list(self):
         """

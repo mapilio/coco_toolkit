@@ -930,7 +930,7 @@ def print_info(message: str):
     logging.info(message)
 
 
-def main(img_path, json_path):
+def cocoviewer(img_path, json_path):
     print_info("Starting...")
     parser.parse_args()
     root = tk.Tk()
