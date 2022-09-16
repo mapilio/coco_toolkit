@@ -1,7 +1,7 @@
 import os
 import unittest
-
-from coco_toolkit.convertors.coco2yolo import convert_coco_json_to_yolo_txt
+from coco_toolkit.convertors.voc2coco import voc_to_coco
+from coco_toolkit.convertors.coco2yolo import coco_to_yolo
 from coco_toolkit.helper.merge import merge_multiple_cocos
 from coco_toolkit.helper.preprocess import PreProcess
 from coco_toolkit.helper.report import AnalyzeCategories
