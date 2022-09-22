@@ -100,6 +100,7 @@ from coco_toolkit.helper.report import AnalyzeCategories
 ```bash
 
 from coco_toolkit.convertors.converter import voc2coco
+from coco_toolkit.convertors.converter import coco2yolo
 ```
 
 ### ClassPreProcess
