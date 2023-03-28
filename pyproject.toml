@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "coco_toolkit"
-version = "0.1.0"
+version = "0.1.3"
 description = "A Reporer Everyting for traninig CocoDataset"
 readme = "README.md"
 authors = ["mcvarer <murat@visiosoft.com.tr>"]
@@ -13,7 +13,8 @@ addict = "^2.4.0"
 pre-commit = "^2.19.0"
 tox = "^3.25.1"
 pytest = "^7.1.2"
-numpy = "^1.23.1"
+numpy = "^1.22.1"
+pyodi = "0.0.9"
 opencv-python = "^4.6.0"
 
 [tool.poetry.dev-dependencies]

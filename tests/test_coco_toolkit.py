@@ -52,14 +52,14 @@ class TestCocoMergeTool(unittest.TestCase):
         result = p.check_id_unique()
         self.assertTrue(result)
 
-    def test_extrack_data_by_class_name(self):
+    def test_extract_data_by_class_name(self):
         path = "tests/coco_dataset/annotations/coco.json"
         coco = PreProcess.reader(path)
         img_path = "tests/coco_dataset/images"
         out_path = os.getcwd()
         p = PreProcess(coco)
         export_list = ["crosswalk"]
-        p.extrack_data_by_class_name(categories=export_list, image_path=img_path, out_path=out_path)
+        p.extract_data_by_class_name(categories=export_list, image_path=img_path, out_path=out_path)
         result = AnalyzeCategories(p.coco).class_have_ann_list()
         self.assertEqual(result, export_list)
 
@@ -73,6 +73,18 @@ class TestCocoMergeTool(unittest.TestCase):
         p.filter_data_by_class_name(categories=filter_list, image_path=img_path, out_path=out_path)
         result = AnalyzeCategories(p.coco).class_have_ann_list()
         self.assertEqual(result, ["stop", "trafficlight"])
+
+    def test_separate_json_by_categories(self):
+        path = "tests/coco_dataset/annotations/coco.json"
+        coco = PreProcess.reader(path)
+        p = PreProcess(coco)
+        p.separate_json_by_categories()
+
+    def test_change_category_name_and_id(self):
+        path = "tests/coco_dataset/annotations/coco.json"
+        coco = PreProcess.reader(path)
+        p = PreProcess(coco)
+        p.change_category_name_and_id(object_id=1, new_id=3, new_name="cat")
 
     def test_remove_segmentation(self):
         path = "tests/coco_dataset/annotations/coco.json"
@@ -177,6 +189,11 @@ class TestCocoMergeTool(unittest.TestCase):
         self.assertEqual(result, len_annotations)
         self.assertEqual(result_1, len_images)
         self.assertEqual(result_2, len_categories)
+
+    def test_plot_category_destinations(self):
+        path = "tests/coco_dataset/annotations/coco.json"
+        coco = PreProcess.reader(path)
+        AnalyzeCategories(coco).plot_category_destinations()
 
     def test_remove_distorted_bbox(self):
         path = "tests/coco_dataset/annotations/coco.json"

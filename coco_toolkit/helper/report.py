@@ -1,5 +1,6 @@
 import logging
 import math
+import os
 
 import matplotlib.pyplot as plt
 
@@ -12,6 +13,28 @@ class AnalyzeCategories:
         :param coco: Coco json file
         """
         self.coco = coco.copy()
+
+    def plot_category_destinations(self):
+
+        categories = {category["id"]: category["name"] for category in self.coco["categories"]}
+        category_destinations = {category_id: [] for category_id in categories}
+        for annotation in self.coco["annotations"]:
+            category_id = annotation["category_id"]
+            image_id = annotation["image_id"]
+            image_info = next((image for image in self.coco["images"] if image["id"] == image_id), None)
+            if image_info:
+                category_destinations[category_id].append((image_info["file_name"], annotation["bbox"]))
+        for category_id, destination in category_destinations.items():
+            category_name = categories[category_id]
+            fig, ax = plt.subplots()
+            for image_filename, bbox in destination:
+                ax.text(bbox[0], bbox[1], image_filename, fontsize=8, color="white",
+                        bbox=dict(facecolor='red', alpha=0.5))
+            ax.set_xlim([0, 1000])
+            ax.set_ylim([0, 1000])
+            ax.set_title(f"Category: {category_name}")
+            plt.savefig(f"tests/output/{category_name}")
+            plt.close()
 
     def get_class_info(self):
         class_id = {}
