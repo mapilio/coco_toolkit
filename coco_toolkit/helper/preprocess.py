@@ -129,7 +129,7 @@ class PreProcess:
                     log.error(f"{key} id not unique")
             return False
 
-    def extrack_data_by_class_name(self, categories: list, image_path: str, out_path: str):
+    def extract_data_by_class_name(self, categories: list, image_path: str, out_path: str):
         """
         This function export coco json file and images, then save image
          and json file to new folder in given path directory
@@ -181,6 +181,43 @@ class PreProcess:
         p.save_coco_file(directory=ann_path, file_name="extracted_dataset")
         logging.getLogger().setLevel(logging.INFO)
         logging.info(f"Extracted dataset created to {out_path}/extracted_dataset_{time}")
+
+    def separate_json_by_categories(self):
+
+        categories = self.coco['categories']
+        category_images = {}
+        for category in categories:
+            category_images[category['name']] = []
+        images = self.coco['images']
+        for image in images:
+            image_id = image['id']
+            file_name = image['file_name']
+            for annotation in self.coco['annotations']:
+                if annotation['image_id'] == image_id:
+                    category_id = annotation['category_id']
+                    category_name = next((cat['name'] for cat in categories if cat['id'] == category_id), None)
+                    if category_name is not None:
+                        category_images[category_name].append({'id': image_id, 'file_name': file_name})
+
+        for category_name, image_data in category_images.items():
+            with open(f"tests/output/{category_name}.json", "w") as outfile:
+                json.dump(image_data, outfile)
+
+    def change_category_name_and_id(self, object_id: int, new_id: int, new_name: str):
+        """
+        :param path: json path
+        :param object_id: old category id
+        :param new_id: new category id
+        :param new_name: new category name
+        """
+        for category in self.coco['categories']:
+            if category['id'] == object_id:
+                category['id'] = new_id
+                category['name'] = new_name
+                break
+
+        with open("tests/output/coco_dataset_new.json", 'w') as f:
+            json.dump(self.coco, f)
 
     def filter_data_by_class_name(self, categories: list, image_path: str, out_path: str):
         """
@@ -258,6 +295,22 @@ class PreProcess:
         """
         with open(os.path.join(directory, f"{file_name}.json"), "w") as fp:
             json.dump(self.coco, fp)
+
+    def compare_two_annotations(self, path1: str, path2: str):
+        """
+
+        :param path1: first path
+        :param path2: second path
+        """
+        coco_file = [path1, path2]
+
+        for i in range(2):
+            with open(coco_file[i], "r") as f:
+                coco_data = json.load(f)
+
+            num_annotations = len(coco_data["annotations"])
+            logging.getLogger().setLevel(logging.INFO)
+            logging.info(f"The COCO dataset has {num_annotations} annotations.")
 
     def remove_duplicate_image_name(self):
         """

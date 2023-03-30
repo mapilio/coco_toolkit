@@ -20,12 +20,15 @@ COCO-TOOLKIT
 		- [set_unique_class_id](#set_unique_class_id)
 		- [set_unique_annotation_id](#set_unique_annotation_id)
 		- [check_id_unique](#check_id_unique)
-		- [extrack_data_by_class_name](#extrack_data_by_class_name)
+        - [change_category_name_and_id](#change_category_name_and_id)
+		- [extract_data_by_class_name](#extract_data_by_class_name)
+        - [separate_json_by_categories](#separate_json_by_categories)
 		- [filter_data_by_class_name](#filter_data_by_class_name)
 		- [remove_segmentation](#remove_segmentation)
 		- [remove_distorted_bbox](#remove_distorted_bbox)
 		- [box2segmentation](#box2segmentation)
 		- [save_coco_file](#save_coco_file)
+        - [compare_two_annotations](#compare_two_annotations)
 		- [remove_duplicate_image_name](#remove_duplicate_image_name)
 		- [change_image_file_names](#change_image_file_names)
 		- [train_test_validation_split](#train_test_validation_split)
@@ -34,11 +37,14 @@ COCO-TOOLKIT
     - [FunctionMerge](#functionmerge)
 		- [merge_multiple_cocos](#merge_multiple_cocos)
     - [ClassAnalyzeCategories](#classanalyzecategories)
+        - [Ground-truth](#Ground-truth)
+        - [Paint-annotations](#Paint-annotations)
 		- [given_category_count](#given_category_count)	
 		- [class_names](#class_names)
 		- [total_class_count](#total_class_count)
 		- [classes_have_annotations_tuple](#classes_have_annotations_tuple)
 		- [plot_class_pie_chart](#plot_class_pie_chart)
+        - [plot_category_destinations](#plot_category_destinations)
 		- [images_aspect_ratio](#images_aspect_ratio)
 		- [bbox_aspect_ratio](#bbox_aspect_ratio)
 		- [class_have_ann_list](#class_have_ann_list)
@@ -167,8 +173,25 @@ p = PreProcess(coco)
 result = p.check_id_unique() # Return False or True
 ```
 
-##### extrack_data_by_class_name
-This function extrack coco json file according to given list of categories. Saves new coco json data(annotations and images) to given out_path.
+##### change_category_name_and_id
+
+This function 
+
+param path: json path
+param object_id: old category id
+param new_id: new category id
+param new_name: new category name
+
+For example:
+```bash
+path = "coco_dataset/annotations/coco.json"
+coco = PreProcess.reader(path)
+p = PreProcess(coco)
+p.change_category_name_and_id(object_id=1, new_id=3, new_name="cat")
+```
+
+##### extract_data_by_class_name
+This function extract coco json file according to given list of categories. Saves new coco json data(annotations and images) to given out_path.
 
 parameter categories: List of chosen categories names
 parameter image_path: Image path of dataset
@@ -182,12 +205,23 @@ img_path = "coco_dataset/images"
 out_path = os.getcwd()
 p = PreProcess(coco)
 export_list = ["crosswalk"]
-extrack_list = ["crosswalk"] # Category to be extracted from coco data
-p.extrack_data_by_class_name(
+extract_list = ["crosswalk"] # Category to be extracted from coco data
+p.extract_data_by_class_name(
             categories=export_list, image_path=img_path,
             out_path=out_path
         )
 p.coco # Processed coco json file 
+```
+
+##### separate_json_by_categories
+This function separate json by categories 
+
+For example:
+```bash
+path = "/coco_dataset/annotations/coco.json"
+coco = PreProcess.reader(path)
+p = PreProcess(coco)
+p.separate_json_by_categories()
 ```
 
 ##### filter_data_by_class_name
@@ -273,6 +307,18 @@ coco = PreProcess.reader(path)
 p = PreProcess(coco)
 p.remove_duplicate_image_name()
 p.coco # Processed coco json file 
+```
+##### compare_two_annotations
+This function compare annotations two json
+
+For example:
+```bash
+path1 = "coco_dataset/annotations/coco.json"
+path2= "coco_dataset_1/annotations/coco.json"
+coco = PreProcess.reader(path)
+p = PreProcess(coco)
+p.compare_two_annotations(path1=path1,path2=path2)
+
 ```
 ##### change_image_file_names
 This function change images' file name and copy them to a new folder. If inplace True save coco json file to new
@@ -379,6 +425,23 @@ path = "coco_dataset/annotations/coco.json"
 coco = PreProcess.reader(path)
 class_name_list = AnalyzeCategories(coco).class_names()
 ```
+
+##### Ground-truth
+ For example:
+```bash
+path = "coco_dataset/annotations/coco.json"
+pyodi ground-truth (path)
+```
+
+##### Paint-annotations
+ For example:
+```bash
+jsonpath = "coco_dataset/annotations/coco.json"
+images= "coco_dataset/images/"
+painted_images= "output"
+pyodi paint-annotations (jsonpath) (images) (painted_images)
+```
+
 ##### total_class_count
 This function return class count.
 
@@ -388,7 +451,14 @@ path = "coco_dataset/annotations/coco.json"
 coco = PreProcess.reader(path)
 count = AnalyzeCategories(coco).total_class_count()
 ```
-
+##### plot_category_destinations
+This function draw category destinations
+ For example:
+```bash
+path = "tests/coco_dataset/annotations/coco.json"
+coco = PreProcess.reader(path)
+tuple = AnalyzeCategories(coco).plot_category_destinations()
+```
 ##### classes_have_annotations_tuple
 This function return class names as  tuple that has annotation.
 
